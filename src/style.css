@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: black;
+}
+
+.checkerboard {
+  background-image: repeating-conic-gradient(#333 0% 25%, #1a1a1a 0% 50%);
+  background-size: 16px 16px;
+}
