@@ -41,6 +41,7 @@ export class OpenAIClient {
 
   async generateImage(params: {
     prompt: string;
+    model?: string;
     size?: string;
     quality?: string;
   }): Promise<string> {
@@ -51,7 +52,7 @@ export class OpenAIClient {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-image-1',
+        model: params.model || 'gpt-image-1',
         prompt: params.prompt,
         size: params.size || '1024x1024',
         quality: params.quality || 'high',
@@ -66,6 +67,46 @@ export class OpenAIClient {
       }));
       throw new Error(
         `Image generation error: ${error.error?.message || response.statusText}`,
+      );
+    }
+
+    const data = await response.json();
+    if (!data.data?.[0]?.b64_json) {
+      throw new Error('No image data returned');
+    }
+    return data.data[0].b64_json;
+  }
+
+  async editImage(params: {
+    prompt: string;
+    imageBlob: Blob;
+    model?: string;
+    size?: string;
+    quality?: string;
+  }): Promise<string> {
+    const formData = new FormData();
+    formData.append('image[]', params.imageBlob, 'image.png');
+    formData.append('prompt', params.prompt);
+    formData.append('model', params.model || 'gpt-image-1');
+    formData.append('size', params.size || '1024x1024');
+    formData.append('quality', params.quality || 'high');
+    formData.append('background', 'transparent');
+    formData.append('n', '1');
+
+    const response = await fetch(`${BASE_URL}/images/edits`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        error: { message: response.statusText },
+      }));
+      throw new Error(
+        `Image edit error: ${error.error?.message || response.statusText}`,
       );
     }
 

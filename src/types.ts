@@ -41,6 +41,8 @@ export interface CustomStyle {
   prompt: string;
 }
 
+export type ImageModel = 'gpt-image-1' | 'gpt-image-1-mini';
+
 export interface AppState {
   currentView: ViewName;
   apiKey: string | null;
@@ -49,6 +51,8 @@ export interface AppState {
   lastResult: GenerationResult | null;
   selectedStyle: string;
   customStyles: CustomStyle[];
+  imageModel: ImageModel;
+  isRefining: boolean;
 }
 
 export interface GenerationResult {

@@ -15,7 +15,7 @@ export function renderApp(state: AppState, container: HTMLElement): void {
       ${renderView(state)}
     </main>
     <footer class="border-t border-neutral px-6 py-4 text-center">
-      <p class="text-xs text-neutral-500">Squid — All processing happens in your browser. Your API key never leaves your device.</p>
+      <p class="text-xs text-neutral-500">Your API key and creations are stored only in your browser and is never sent to our servers.</p>
     </footer>
     <div id="lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 cursor-pointer">
       <div class="bg-[#f0ece4] rounded overflow-hidden max-w-[90vw] max-h-[90vh]">
@@ -70,6 +70,20 @@ function renderGenerateView(state: AppState): string {
           ${renderStyleSelector(state.selectedStyle, state.customStyles)}
         </div>
 
+        <div>
+          <label class="block text-sm font-medium mb-2">Model</label>
+          <div class="flex gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="image-model" value="gpt-image-1" class="hidden peer" ${state.imageModel === 'gpt-image-1' ? 'checked' : ''} />
+              <span class="inline-block px-3 py-1 text-sm border rounded-full transition-colors peer-checked:bg-white peer-checked:text-black peer-checked:border-white border-neutral-600 hover:border-white">HD (~$0.17)</span>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="image-model" value="gpt-image-1-mini" class="hidden peer" ${state.imageModel === 'gpt-image-1-mini' ? 'checked' : ''} />
+              <span class="inline-block px-3 py-1 text-sm border rounded-full transition-colors peer-checked:bg-white peer-checked:text-black peer-checked:border-white border-neutral-600 hover:border-white">Mini (~$0.02)</span>
+            </label>
+          </div>
+        </div>
+
         <button
           id="generate-btn"
           class="w-full py-3 text-sm font-semibold rounded transition-colors ${!hasKey || state.isGenerating ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed' : 'bg-white text-black hover:bg-neutral-200'}"
@@ -91,7 +105,7 @@ function renderGenerateView(state: AppState): string {
       <aside class="w-64 shrink-0 hidden md:block">
         <div class="sticky top-6 border border-neutral rounded p-4">
           <div id="info-panel">
-            ${renderInfoPanel(state.selectedStyle, state.customStyles)}
+            ${renderInfoPanel(state.selectedStyle, state.customStyles, state.imageModel)}
           </div>
         </div>
       </aside>
@@ -106,8 +120,12 @@ function renderResult(state: AppState): string {
       ${renderCheckerboardPreview(r.imageUrl)}
 
       <div class="flex justify-center gap-3">
-        <button id="download-btn" class="px-4 py-2 text-sm font-medium border border-neutral-600 rounded hover:border-white transition-colors">Download PNG</button>
+        <button id="download-btn" class="px-4 py-2 text-sm font-medium border border-neutral-600 rounded hover:border-white transition-colors cursor-pointer">Download PNG</button>
+        <button id="refine-btn" class="px-4 py-2 text-sm font-medium border border-neutral-600 rounded hover:border-white transition-colors cursor-pointer ${state.isGenerating ? 'opacity-50 cursor-not-allowed' : ''}" ${state.isGenerating ? 'disabled' : ''}>Refine</button>
       </div>
+
+      ${state.isRefining ? renderRefinementInput() : ''}
+
       <p class="text-center text-xs text-neutral-500">Automatically saved to your library</p>
 
       ${renderWarnings(r.warnings)}
@@ -120,6 +138,23 @@ function renderResult(state: AppState): string {
           <p><strong class="text-neutral-200">Final prompt:</strong> ${escapeHtml(r.safePrompt)}</p>
         </div>
       </details>
+    </div>
+  `;
+}
+
+function renderRefinementInput(): string {
+  return `
+    <div class="border border-neutral rounded p-4 space-y-3">
+      <label class="block text-sm font-medium">What would you like to change?</label>
+      <textarea
+        id="refinement-feedback"
+        class="w-full h-20 px-4 py-3 bg-transparent border border-neutral rounded text-sm resize-y placeholder-neutral-500 focus:outline-none focus:border-white transition-colors"
+        placeholder="Make the lines bolder, add more detail to the eyes, simplify the background..."
+      ></textarea>
+      <div class="flex gap-2 justify-end">
+        <button id="cancel-refine-btn" class="px-4 py-2 text-sm border border-neutral-600 rounded hover:border-white transition-colors cursor-pointer">Cancel</button>
+        <button id="submit-refine-btn" class="px-4 py-2 text-sm font-semibold bg-white text-black rounded hover:bg-neutral-200 transition-colors cursor-pointer">Apply</button>
+      </div>
     </div>
   `;
 }
@@ -176,8 +211,9 @@ export function renderLibraryGrid(images: LibraryEntry[]): string {
         </div>
         <p class="text-xs text-neutral-400 line-clamp-2">${escapeHtml(img.originalPrompt)}</p>
         <div class="flex justify-end gap-2">
-          <button class="text-xs underline hover:text-white transition-colors library-download" data-image-id="${img.id}">Download</button>
-          <button class="text-xs underline text-neutral-500 hover:text-red-500 transition-colors library-delete" data-image-id="${img.id}">Delete</button>
+          <button class="text-xs underline cursor-pointer hover:text-white transition-colors library-refine" data-image-id="${img.id}">Refine</button>
+          <button class="text-xs underline cursor-pointer hover:text-white transition-colors library-download" data-image-id="${img.id}">Download</button>
+          <button class="text-xs underline cursor-pointer text-neutral-500 hover:text-red-500 transition-colors library-delete" data-image-id="${img.id}">Delete</button>
         </div>
       </div>
     </div>

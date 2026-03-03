@@ -1,9 +1,10 @@
-import type { AppState, CustomStyle, GenerationResult, ViewName } from '../types';
+import type { AppState, CustomStyle, GenerationResult, ImageModel, ViewName } from '../types';
 
 type StateListener = (state: AppState) => void;
 
 const API_KEY_STORAGE = 'tattoo_openai_api_key';
 const CUSTOM_STYLES_STORAGE = 'tattoo_custom_styles';
+const IMAGE_MODEL_STORAGE = 'tattoo_image_model';
 
 function loadCustomStyles(): CustomStyle[] {
   try {
@@ -22,6 +23,8 @@ const initialState: AppState = {
   lastResult: null,
   selectedStyle: 'illustrative',
   customStyles: loadCustomStyles(),
+  imageModel: (localStorage.getItem(IMAGE_MODEL_STORAGE) as ImageModel) || 'gpt-image-1-mini',
+  isRefining: false,
 };
 
 let state: AppState = { ...initialState };
@@ -69,6 +72,15 @@ export function addCustomStyle(style: CustomStyle): void {
   const updated = [...state.customStyles, style];
   localStorage.setItem(CUSTOM_STYLES_STORAGE, JSON.stringify(updated));
   setState({ customStyles: updated, selectedStyle: style.name });
+}
+
+export function setImageModel(model: ImageModel): void {
+  localStorage.setItem(IMAGE_MODEL_STORAGE, model);
+  setState({ imageModel: model });
+}
+
+export function setRefining(isRefining: boolean): void {
+  setState({ isRefining });
 }
 
 export function deleteCustomStyle(name: string): void {

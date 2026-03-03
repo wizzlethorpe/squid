@@ -34,7 +34,7 @@ export function renderHeader(currentView: string): string {
         ${['generate', 'library', 'settings']
           .map(
             (view) =>
-              `<button class="px-3 py-1.5 text-sm ${currentView === view ? 'bg-white text-black' : 'text-neutral-content hover:text-white'} rounded transition-colors" data-view="${view}">${view.charAt(0).toUpperCase() + view.slice(1)}</button>`,
+              `<button class="px-3 py-1.5 text-sm cursor-pointer ${currentView === view ? 'bg-white text-black' : 'text-neutral-content hover:text-white'} rounded transition-colors" data-view="${view}">${view.charAt(0).toUpperCase() + view.slice(1)}</button>`,
           )
           .join('')}
       </div>
@@ -77,9 +77,21 @@ export function renderStyleSelector(
   return `<div class="flex flex-wrap gap-2">${builtinChips}${customChips}${otherChip}</div>`;
 }
 
+function renderCostEstimate(imageModel: string): string {
+  const isHd = imageModel === 'gpt-image-1';
+  return `
+    <div class="space-y-1">
+      <p class="text-xs text-neutral-500 font-medium">Estimated cost per generation</p>
+      <p class="text-sm">${isHd ? '~$0.17 – $0.20' : '~$0.02 – $0.03'}</p>
+      <p class="text-xs text-neutral-500">GPT-4o ~$0.003 + ${isHd ? 'gpt-image-1 high ~$0.17' : 'gpt-image-1-mini ~$0.02'}</p>
+    </div>
+  `;
+}
+
 export function renderInfoPanel(
   selectedStyle: string,
   customStyles: CustomStyle[],
+  imageModel: string,
 ): string {
   // Custom style editor
   if (selectedStyle === '__new_custom__') {
@@ -108,11 +120,7 @@ export function renderInfoPanel(
         <p class="text-sm text-neutral-400 leading-relaxed">${escapeHtml(custom.prompt)}</p>
         <button class="text-xs underline text-neutral-500 hover:text-red-500 transition-colors delete-custom-style" data-style-name="${escapeHtml(custom.name)}">Delete style</button>
         <hr class="border-neutral" />
-        <div class="space-y-1">
-          <p class="text-xs text-neutral-500 font-medium">Estimated cost per generation</p>
-          <p class="text-sm">~$0.17 – $0.20</p>
-          <p class="text-xs text-neutral-500">GPT-4o refinement ~$0.003 + gpt-image-1 high ~$0.17</p>
-        </div>
+        ${renderCostEstimate(imageModel)}
       </div>
     `;
   }
@@ -125,11 +133,7 @@ export function renderInfoPanel(
       <h3 class="text-sm font-semibold">${selectedStyle.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('-')}</h3>
       <p class="text-sm text-neutral-400 leading-relaxed">${escapeHtml(description)}</p>
       <hr class="border-neutral" />
-      <div class="space-y-1">
-        <p class="text-xs text-neutral-500 font-medium">Estimated cost per generation</p>
-        <p class="text-sm">~$0.17 – $0.20</p>
-        <p class="text-xs text-neutral-500">GPT-4o refinement ~$0.003 + gpt-image-1 high ~$0.17</p>
-      </div>
+      ${renderCostEstimate(imageModel)}
     </div>
   `;
 }
